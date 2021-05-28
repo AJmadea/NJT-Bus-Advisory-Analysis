@@ -30,6 +30,8 @@ def get_data():
         fromTitle = each_line.find("<title>BUS ")
         endTitle = each_line.find("</title>")
         t = each_line[(fromTitle + len("<title>BUS ")):endTitle].split(' - ')
+        if t[0].rstrip() == "":
+            continue
         bus_lines.append(t[0])
         date_times.append(t[1])
         fromDesc = each_line.find('<description>')
@@ -48,6 +50,7 @@ def get_data():
     freq = freq_bus(df['BUS'].astype(int))
 
     freq_df = pd.DataFrame(data={"Bus Line": freq.keys(), "# Appearances": freq.values()})
+
     return freq_df, freq, df
 
 
@@ -60,10 +63,6 @@ def get_most_frequent(freq_table):
         if freq_table[k] == max_value:
             max_keys.append(k)
 
-    keys = str(max_value)
-    if len(max_keys):
-        keys = keys[1:len(keys)]
-
     return "Bus Line(s) {} have {} appearances.".format(max_keys, max_value)
 
 
@@ -72,12 +71,13 @@ if __name__ == '__main__':
     st.subheader("""Finding The Most Common Bus Line That Has/Had Advisories""")
     freq_frame, freq_table, raw_data = get_data()
     now = datetime.now()
-    #raw_data.to_csv("C:/Users/Andrew/Desktop/njt_bus_adv_data/NJT_BUS_ADV_Data_" + now.strftime("%y%m%d_%H%M%S")+".csv")
+    raw_data.to_csv("C:/Users/Andrew/Desktop/njt_bus_adv_data/NJT_BUS_ADV_Data_" + now.strftime("%y%m%d_%H%M%S")+".csv")
     t = "Last Updated \n{}".format(now.strftime("%c"))
     st.write(t)
 
     top_buses = get_most_frequent(freq_table)
     st.write(top_buses)
+
 
     fig = px.bar(freq_frame, x='Bus Line', y='# Appearances',
                  title="Freq of Bus Lines on NJT Bus Advisory Feed")
