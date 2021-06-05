@@ -80,13 +80,13 @@ if __name__ == '__main__':
     freq_frame, freq_table, raw_data = get_data()
     now = datetime.now()
 
-    t = "Last Updated {}".format(now.strftime("%c"))
+    t = "Last Updated {}".format(now.strftime("%A %x %I:%M:%S %p"))
     st.write(t)
 
     top_buses = get_most_frequent(freq_table)
     st.write(top_buses)
 
-    freq_frame.sort_values(by=['# Appearances', "Bus Line"], inplace=True, ascending=False)
+    freq_frame.sort_values(by=['# Appearances', "Bus Line"], inplace=True, ascending=[False, True])
     freq_frame.reset_index(inplace=True, drop=True)
     fig = create_good_bar_graph(freq_frame)
 
