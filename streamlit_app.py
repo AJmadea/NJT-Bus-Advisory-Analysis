@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 import requests
 from datetime import datetime
 
@@ -44,15 +43,10 @@ def get_data():
         a = d.find(': ')
         a = 0 if a == -1 else a
         index = d.find(' - ')
-        descript.append(d[a:index])
-
-    df = pd.DataFrame(data={'BUS': bus_lines, 'DATE_TIME': date_times, 'DESCRIPTION': descript})
-
-    freq = freq_bus(df['BUS'].astype(int))
-
-    freq_df = pd.DataFrame(data={"Bus Line": freq.keys(), "# Appearances": freq.values()})
-
-    return freq_df, freq, df
+        d = d[a:index]
+        d = d.replace('&amp;', "")
+        descript.append(d.strip())
+    return pd.DataFrame(data={'BUS': bus_lines, 'DATE_TIME': date_times, 'DESCRIPTION': descript})
 
 
 @st.cache(hash_funcs={dict: id})
@@ -63,7 +57,7 @@ def get_most_frequent(freq_table):
     for k in freq_table.keys():
         if freq_table[k] == max_value:
             max_keys.append(k)
-
+    max_keys.sort()
     return "Bus Line(s) {} have {} appearances.".format(str(max_keys)[1:-1], max_value)
 
 
@@ -74,22 +68,48 @@ def create_good_bar_graph(data):
                   title="Freq of Bus Lines on NJT Bus Advisory Feed")
 
 
+@st.cache()
+def format_dataframe_into_string(df):
+    string = ""
+    for i in df.index:
+        dt = df.loc[i, 'DATE_TIME']
+        desc = df.loc[i, 'DESCRIPTION']
+        string += dt + " " + desc + '\n\n'
+    return string
+
+
 if __name__ == '__main__':
-    st.header("""NJT Bus Advisory""")
-    st.subheader("""Finding The Most Common Bus Line That Has/Had Advisories""")
-    freq_frame, freq_table, raw_data = get_data()
+    st.title("""New Jersey Transit Bus Advisory Feed""")
+
+    raw_data = get_data()
     now = datetime.now()
-
     t = "Last Updated {}".format(now.strftime("%A %x %I:%M:%S %p"))
-    st.write(t)
+    st.header(t)
+    option = st.selectbox(label="What To Do", index=0,
+                          options=("Most Frequent Bus Lines With Advisories", "Does My Bus Line Have Advisories?"))
 
-    top_buses = get_most_frequent(freq_table)
-    st.write(top_buses)
+    if option == "Most Frequent Bus Lines With Advisories":
+        st.subheader("""Finding The Most Common Bus Line That Has/Had Advisories""")
+        freq_table = freq_bus(raw_data['BUS'].astype(int))
+        freq_frame = pd.DataFrame(data={"Bus Line": freq_table.keys(), "# Appearances": freq_table.values()})
 
-    freq_frame.sort_values(by=['# Appearances', "Bus Line"], inplace=True, ascending=[False, True])
-    freq_frame.reset_index(inplace=True, drop=True)
-    fig = create_good_bar_graph(freq_frame)
+        top_buses = get_most_frequent(freq_table)
+        st.write(top_buses)
 
-    print(freq_frame.head(5))
-    st.plotly_chart(fig)
+        freq_frame.sort_values(by=['# Appearances', "Bus Line"], inplace=True, ascending=[False, True])
+        freq_frame.reset_index(inplace=True, drop=True)
+        fig = create_good_bar_graph(freq_frame)
+        st.plotly_chart(fig)
+    elif option == "Does My Bus Line Have Advisories?":
+        my_line = st.text_input(label='Please Enter Your Bus Line')
+
+        if my_line in raw_data['BUS'].unique().tolist():
+            st.write("""That Bus Line Has These Advisories:""")
+            _slice = raw_data[raw_data['BUS'] == my_line]
+            st.write(format_dataframe_into_string(_slice))
+        else:
+            st.write("""There are no advisories for that bus line!""")
+
+    st.write("""Please Click on \'Update Info\' to Update the app!""")
+
     st.button(label='Update Info')
