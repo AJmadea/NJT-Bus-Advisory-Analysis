@@ -96,7 +96,7 @@ if __name__ == '__main__':
 
     raw_data = get_data()
     now = datetime.now()
-    t = "Last Updated {}".format(get_nj_date_time())
+    t = "Last Updated {} Eastern Time".format(get_nj_date_time())
     st.header(t)
     option = st.selectbox(label="What To Do", index=0,
                           options=("Most Frequent Bus Lines With Advisories", "Does My Bus Line Have Advisories?"))
