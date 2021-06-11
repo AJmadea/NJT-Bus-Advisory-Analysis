@@ -83,11 +83,10 @@ def get_histogram(_freq_table):
             v[e] = _t
         else:
             v[e] = 1
-    ''' There's a total of 267 routes in NJT
-        If the route DNE in the feed, then it should have 0 advisories.
-    '''
-    v[0] = 267 - len(values)  # Calculating the routes with no advisories
 
+    # There's a total of 267 routes in NJT
+    # If the route DNE in the feed, then it should have 0 advisories.
+    v[0] = 267 - len(values)  # Calculating the routes with no advisories
     _df = pd.DataFrame(data={"# Advisories": v.keys(), "# Bus Lines with this many Advisories": v.values()})
     return px.bar(_df, x="# Advisories", y="# Bus Lines with this many Advisories",
                   title='How many advisories are common?')
