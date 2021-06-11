@@ -5,6 +5,19 @@ import requests
 from datetime import datetime
 
 
+def get_nj_date_time():
+    # using an API instead of datetime.now() since server might run on a different part of the world.
+    # BUT will use datetime.now() if the api connection fails.
+    url = "http://worldtimeapi.org/api/timezone/America/New_York.txt"
+    try:
+        # The datetime is the 12th element from index 14 inclusive to 33 exclusive
+        dt = requests.get(url).text.split("\n")[12][14:33].replace("T", " ")
+        return dt
+    except ConnectionError as ce:
+        print(ce)
+        return datetime.now().strftime("%A %x %I:%M:%S %p")
+
+
 def freq_bus(coll):
     d = {}
     for each in coll:
@@ -63,7 +76,7 @@ def get_most_frequent(freq_table):
 
 def create_good_bar_graph(data):
     data['Bus Line'] = data['Bus Line'].astype(str)
-    print(data.dtypes)
+    #print(data.dtypes)
     return px.bar(data, x='Bus Line', y='# Appearances',
                   title="Freq of Bus Lines on NJT Bus Advisory Feed")
 
@@ -83,7 +96,7 @@ if __name__ == '__main__':
 
     raw_data = get_data()
     now = datetime.now()
-    t = "Last Updated {}".format(now.strftime("%A %x %I:%M:%S %p"))
+    t = "Last Updated {}".format(get_nj_date_time())
     st.header(t)
     option = st.selectbox(label="What To Do", index=0,
                           options=("Most Frequent Bus Lines With Advisories", "Does My Bus Line Have Advisories?"))
@@ -108,7 +121,7 @@ if __name__ == '__main__':
             _slice = raw_data[raw_data['BUS'] == my_line]
             st.write(format_dataframe_into_string(_slice))
         else:
-            st.write("""There are no advisories for that bus line!""")
+            st.write("There are no advisories for the {} bus line!".format(my_line))
 
     st.write("""Please Click on \'Update Info\' to Update the app!""")
 
