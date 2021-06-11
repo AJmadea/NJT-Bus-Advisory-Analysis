@@ -74,11 +74,29 @@ def get_most_frequent(freq_table):
     return "Bus Line(s) {} have {} appearances.".format(str(max_keys)[1:-1], max_value)
 
 
-def create_good_bar_graph(data):
+def get_histogram(_freq_table):
+    values = _freq_table.values()
+    v = {}
+    for e in values:
+        if e in v.keys():
+            _t = v[e] + 1
+            v[e] = _t
+        else:
+            v[e] = 1
+    ''' There's a total of 267 routes in NJT
+        If the route DNE in the feed, then it should have 0 advisories.
+    '''
+    v[0] = 267 - len(values)  # Calculating the routes with no advisories
+
+    _df = pd.DataFrame(data={"# Advisories": v.keys(), "# Bus Lines with this many Advisories": v.values()})
+    return px.bar(_df, x="# Advisories", y="# Bus Lines with this many Advisories",
+                  title='How many advisories are common?')
+
+
+def create_good_bar_graph(data, current_dt):
     data['Bus Line'] = data['Bus Line'].astype(str)
-    #print(data.dtypes)
     return px.bar(data, x='Bus Line', y='# Appearances',
-                  title="Freq of Bus Lines on NJT Bus Advisory Feed")
+                  title="Freq of Bus Lines on NJT Bus Advisory Feed @ {}".format(current_dt))
 
 
 @st.cache()
@@ -93,10 +111,10 @@ def format_dataframe_into_string(df):
 
 if __name__ == '__main__':
     st.title("""New Jersey Transit Bus Advisory Feed""")
-
+    current_dt = get_nj_date_time()
     raw_data = get_data()
-    now = datetime.now()
-    t = "Last Updated {} Eastern Time".format(get_nj_date_time())
+
+    t = "Last Updated {} Eastern Time".format(current_dt)
     st.header(t)
     option = st.selectbox(label="What To Do", index=0,
                           options=("Most Frequent Bus Lines With Advisories", "Does My Bus Line Have Advisories?"))
@@ -111,8 +129,9 @@ if __name__ == '__main__':
 
         freq_frame.sort_values(by=['# Appearances', "Bus Line"], inplace=True, ascending=[False, True])
         freq_frame.reset_index(inplace=True, drop=True)
-        fig = create_good_bar_graph(freq_frame)
+        fig = create_good_bar_graph(freq_frame, current_dt)
         st.plotly_chart(fig)
+        st.plotly_chart(get_histogram(freq_table))
     elif option == "Does My Bus Line Have Advisories?":
         my_line = st.text_input(label='Please Enter Your Bus Line')
 
@@ -123,6 +142,4 @@ if __name__ == '__main__':
         else:
             st.write("There are no advisories for the {} bus line!".format(my_line))
 
-    st.write("""Please Click on \'Update Info\' to Update the app!""")
-
-    st.button(label='Update Info')
+    st.button(label='Update Graphs')
