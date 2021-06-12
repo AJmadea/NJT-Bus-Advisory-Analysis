@@ -85,9 +85,7 @@ if __name__ == "__main__":
             for e in files:
                 os.remove(base2+e)
 
-        l.log_with_datetime("Flushing...")
     except Exception as err:  # Use specific exception
         l.log(err)
     finally:
-
         l.flush()
