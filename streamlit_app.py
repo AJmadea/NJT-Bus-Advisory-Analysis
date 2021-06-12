@@ -12,7 +12,7 @@ def get_nj_date_time():
     url = "http://worldtimeapi.org/api/timezone/America/New_York.txt"
     try:
         # The datetime is the 12th element from index 14 inclusive to 33 exclusive
-        dt = requests.get(url).text.split("\n")[2][10:28].replace("T", " ")
+        dt = requests.get(url).text.split("\n")[2][10:29].replace("T", " ")
         print(dt)
         return dt
     except ConnectionError as ce:
