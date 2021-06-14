@@ -5,7 +5,6 @@ import requests
 from datetime import datetime
 
 
-@st.cache()
 def get_nj_date_time():
     # using an API instead of datetime.now() since server might run on a different part of the world.
     # BUT will use datetime.now() if the api connection fails.
