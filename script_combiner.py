@@ -32,13 +32,16 @@ def update_info_file(now, new_shape):
 
 
 if __name__ == "__main__":
-    l = Logger(path="C:/Users/Andrew/Desktop/njt_bus_adv_data/logs/")
+    l = Logger(path="C:/Users/Andrew/Desktop/njt_bus_adv_data/logs/", max_files=100)
 
     try:
         month_dict = {'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'May': '05', 'Jun': '06',
                       'Jul': '07', 'Aug': '08', 'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'}
         base = "C:/Users/Andrew/Desktop/njt_bus_adv_data/auto/"
         dirs = os.listdir(base)
+
+        if len(dirs) == 0:
+            raise ValueError("There were no files in the auto folder...")
 
         l.log("Amount of files in the auto folder: " + str(len(dirs)))
 
