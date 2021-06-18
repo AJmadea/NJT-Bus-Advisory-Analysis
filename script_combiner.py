@@ -56,7 +56,9 @@ if __name__ == "__main__":
                 bus = str(temp.loc[i, 'BUS'])
 
                 temp.loc[i, 'BUS_DATETIME'] = bus + " " + dt
-                temp_string = temp.loc[i, 'DESCRIPTION'].strip()
+                #print(temp.loc[i, "DESCRIPTION"])
+                #print(temp.dtypes)
+                temp_string = str(temp.loc[i, 'DESCRIPTION']).strip()
                 temp_string = temp_string.replace("&amp;", "")
                 temp.loc[i, 'DESCRIPTION'] = temp_string
             frames.append(temp)
@@ -67,6 +69,7 @@ if __name__ == "__main__":
         l.log("Amount of rows in the combined auto csv " + str(all_data.shape[0]))
 
         for e in dirs:
+            print('Tyring to remove {}{}'.format(base,e))
             os.remove(base+e)
 
         base2 = "C:/Users/Andrew/Desktop/njt_bus_adv_data/combined/"
