@@ -2,8 +2,62 @@ import pandas as pd
 import os
 import plotly.express as px
 from datetime import datetime
-
 from Logger import Logger
+import main as m
+
+
+def create_top_bus_line_df():
+    n = 21
+    os.chdir("C:/Users/Andrew/Desktop/njt_bus_adv_data/")
+    _data = pd.read_csv("freq_df.csv")
+    columns = _data.columns[2:]
+    ranks = [i for i in range(1, n)]
+
+    ranking_df = pd.DataFrame(data={"Common Descriptor": columns})
+    ranking_df[ranks] = -1
+    ranking_df.set_index("Common Descriptor", inplace=True)
+
+    for c in columns:
+        _slice = _data.sort_values(by=c, ascending=False)
+        list_buses = _slice["Bus"].tolist()
+        list_values = _slice['Freq'].tolist()
+
+        for rank in ranks:
+            if list_values[rank-1] == 0:
+                break
+            ranking_df.loc[c, rank] = list_buses[rank-1]
+
+    for r in ranks:
+        ranking_df.rename({r: "Rank {}".format(r)}, axis=1, inplace=True)
+    ranking_df.to_csv("ranking_df.csv")
+
+
+def common_bus_line_for_each_word():
+    _data = get_data()
+    _common = get_common_attr()
+    freq_table = m.freq_bus(_data['BUS'])
+    freq_df = pd.DataFrame(data={"Bus": freq_table.keys(), "Freq": freq_table.values()})
+    freq_df.sort_values(by="Freq", inplace=True, ascending=False)
+    freq_df.set_index("Bus", inplace=True)
+
+    # a new column is created for each common attr in common
+    for c in _common:
+        freq_df[c] = 0
+
+    for bus_line in freq_df.index:
+        _slice = _data[_data['BUS'] == bus_line]
+        d = {}
+        for _i in _slice.index:
+            for c in _common:
+                if c in str(_slice.loc[_i, 'DESCRIPTION'].lower()):
+                    if c in d.keys():
+                        d[c] = d[c] + 1
+                    else:
+                        d[c] = 1
+        for k in d.keys():
+            freq_df.loc[bus_line, k] = d[k]
+
+    freq_df.to_csv("freq_df.csv")
 
 
 def get_data():
@@ -15,7 +69,7 @@ def get_data():
 
     for i in data.index:
         # Get rid of &amp;
-        temp_string = data.loc[i, 'DESCRIPTION']
+        temp_string = str(data.loc[i, 'DESCRIPTION']).lower()
         temp_string = temp_string.strip()
         temp_string = temp_string.replace('&amp; ', "")
         data.loc[i, 'DESCRIPTION'] = temp_string
@@ -48,6 +102,7 @@ def get_freq_table(common_attr, _data):
 
 
 if __name__ == "__main__":
+    os.chdir("C:/Users/Andrew/Desktop/njt_bus_adv_data/")
     l = Logger(path="C:/Users/Andrew/Desktop/njt_bus_adv_data/word_logs/", max_files=25)
     try:
         l.log("Reading in data from combined/")
@@ -65,6 +120,7 @@ if __name__ == "__main__":
         misc = []
         dups = []
         norm = []
+
         l.log("Finding amount duplicates/uncategorized/1 association")
         for i in data.index:
             temp = data.loc[i, 'DESCRIPTION'].lower()
@@ -110,6 +166,13 @@ if __name__ == "__main__":
             f.write("{} Descriptions with 2 Associations:\n".format(len(dups)))
             for line in dups:
                 f.write("{}\n".format(line))
+
+        l.log("Updating freq_df.csv...")
+        common_bus_line_for_each_word()
+        l.log("Updated freq_df.csv...")
+        l.log("Updating ranking_df.csv")
+        create_top_bus_line_df()
+        l.log("Updated ranking_df.csv")
     except Exception as e:
         l.log(e)
     finally:
