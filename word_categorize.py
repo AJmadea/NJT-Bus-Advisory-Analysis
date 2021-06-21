@@ -6,6 +6,50 @@ from Logger import Logger
 import main as m
 
 
+def create_top_bus_line_account_for_ties():
+    n = 11
+    # Importing data
+    os.chdir("C:/Users/Andrew/Desktop/njt_bus_adv_data/")
+    _data = pd.read_csv("freq_df.csv")
+    # Choosing The Columns
+    columns = _data.columns[2:]
+    # Creating rankings [1,n)
+    ranks = [i for i in range(1, n)]
+
+    # Creating resultant dataframe
+    ranking_df = pd.DataFrame(data={"Common Descriptor": columns})
+    ranking_df[ranks] = "temp"
+    ranking_df.set_index("Common Descriptor", inplace=True)
+
+    # Each slice is sorted by a specific column c
+    for c in columns:
+        _slice = _data.sort_values(by=c, ascending=False)
+
+        # The values in column c are converted into a list and sorted desc
+        list_values = _slice[c].tolist()
+        list_values.sort(reverse=True)
+
+        # All busses that have that value are added into a dictionary
+        # key : value is freq (int) : bus lines (list of ints)
+        v = {}
+        for value in list_values:
+            v[value] = _slice[_slice[c] == value]['Bus'].tolist()
+
+        # (Error prevention) The length of the ranks and the len of the values should be equal size for the zip()
+        if n != len(v.values()):
+            diff = -abs(len(v.values()) - n)
+            for i in range(-1, diff, -1):
+                v[i] = [i]
+
+        # Zipping ranks and values for assignment to the dataframe
+        for rank, value in zip(ranks, v.values()):
+            ranking_df.loc[c, rank] = str(value)
+
+    for r in ranks:
+        ranking_df.rename({r: "Rank {}".format(r)}, axis=1, inplace=True)
+    ranking_df.to_csv("ranking_df.csv")
+
+
 def create_top_bus_line_df():
     n = 21
     os.chdir("C:/Users/Andrew/Desktop/njt_bus_adv_data/")
@@ -101,6 +145,26 @@ def get_freq_table(common_attr, _data):
     return _d
 
 
+def create_text_files_foreach_common():
+    data = get_data()
+    common = get_common_attr()
+
+    for c in common:
+        _d = {c: []}
+        file_name = c.replace(" ", "_")
+        file_name = file_name.replace('.', '')
+        for _i in data.index:
+            desc = data.loc[_i, 'DESCRIPTION'].lower()
+            if c in desc:
+                _temp = _d[c]
+                _temp.append(desc)
+
+        with open("word_lists/word_lists_{}.txt".format(file_name), 'w') as f:
+            f.write("Descriptions that contain\n \'{}\'\n".format(c))
+            for w in _d[c]:
+                f.write("{}\n".format(w))
+
+
 if __name__ == "__main__":
     os.chdir("C:/Users/Andrew/Desktop/njt_bus_adv_data/")
     l = Logger(path="C:/Users/Andrew/Desktop/njt_bus_adv_data/word_logs/", max_files=25)
@@ -167,12 +231,15 @@ if __name__ == "__main__":
             for line in dups:
                 f.write("{}\n".format(line))
 
+        l.log("Writing the words that fit into one category...")
+        create_text_files_foreach_common()
+
         l.log("Updating freq_df.csv...")
         common_bus_line_for_each_word()
-        l.log("Updated freq_df.csv...")
-        l.log("Updating ranking_df.csv")
-        create_top_bus_line_df()
-        l.log("Updated ranking_df.csv")
+
+        l.log("Updating and accounting for ties ranking_df.csv")
+        create_top_bus_line_account_for_ties()
+
     except Exception as e:
         l.log(e)
     finally:
