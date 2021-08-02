@@ -60,10 +60,10 @@ def prepare_data_for_db(data):
     common = common_dictionary.keys()
 
     for i in data.index:
-
         for c in common:
             if c in str(data.loc[i, 'DESCRIPTION']).lower():
                 data.loc[i, "COMMON"] = common_dictionary[c]
+                data.loc[i,'COMMON PHRASE'] = c
                 break
             data.loc[i, 'COMMON'] = -1
 
@@ -159,6 +159,36 @@ def get_rows():
         return row[0]
     finally:
         ibm_db.close(conn)
+
+
+def bus_bin(data, l):
+    # tranform data into bins
+    data['BUS_GROUP'] = data['BUS']/100
+    data['BUS_GROUP'] = data['BUS_GROUP'].astype(int)
+    d = data['BUS_GROUP'].value_counts()
+
+    n = []
+    freq = []
+    for k in d.keys():
+        n.append(k)
+        freq.append(d[k])
+    df = pd.DataFrame(data={"BUS_GROUP": n, 'Freq': freq})
+    df.to_csv('C:/Users/Andrew/Desktop/njt_bus_adv_data/bus_bin.csv')
+
+    try:
+        _dsn, _uid, _pwd = __get_credentials__()
+        conn = ibm_db.connect(_dsn, _uid, _pwd)
+        ibm_db.exec_immediate(conn, "DELETE FROM BUS_BIN")
+        for k in d.keys():
+            sql = 'INSERT INTO BUS_BIN(BUS_GROUP, FREQ) VALUES({}, {})'.format(k, d[k])
+            #l.log(sql)
+            ibm_db.exec_immediate(conn, sql)
+        l.log("Updated BUS_BIN")
+        l.log(sum(d.values()) == data.shape[0])
+    except Exception as err:
+        print(err)
+    finally:
+        l.log("Closing connection for BUS_BIN: {}".format(ibm_db.close(conn)))
 
 
 def get_data_from_database():
