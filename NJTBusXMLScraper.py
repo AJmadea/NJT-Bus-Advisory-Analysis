@@ -28,10 +28,14 @@ for advisory in root:
 df = pd.DataFrame({"Title":titles,'Description':desc,'Node':nodes,'DateTime':dates})
 
 # %%
+df.Node = df.Node.astype(int)
+existingData = pd.read_csv('Advisories.csv')
+existingData.Node = existingData.Node.astype(int)
+df=df.merge(existingData, indicator=True)
+df=df[df._merge=='left_only'].copy()
+
+
 print(df.shape,'More Rows!')
 df.to_csv("Advisories.csv", index=False, mode='a', header=False)
-
-# %%
-advisory.get('title')
 
 
