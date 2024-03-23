@@ -2,6 +2,7 @@
 import pandas as pd
 import requests
 from xml.etree import ElementTree
+import os
 
 # %%
 res=requests.get("http://njtransit.com/rss/BusAdvisories_feed.xml")
@@ -29,7 +30,7 @@ df = pd.DataFrame({"Title":titles,'Description':desc,'Node':nodes,'DateTime':dat
 
 # %%
 df.Node = df.Node.astype(int)
-existingData = pd.read_csv('Advisories.csv')
+existingData = pd.read_csv('C:/Users/Andrew/Desktop/NJT-Bus-Advisory-Analysis/Advisories.csv')
 existingData.Node = existingData.Node.astype(int)
 df=df.merge(existingData, indicator=True)
 df=df[df._merge=='left_only'].copy()
