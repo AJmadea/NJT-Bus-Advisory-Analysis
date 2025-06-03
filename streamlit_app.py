@@ -43,7 +43,7 @@ def parse_data(res):
 
     for advisory in root:
         if advisory.tag=='item':
-            bus.append(advisory.find("title").text.split("-")[0])
+            bus.append(advisory.find("title").text.split("-")[0].replace("BUS ", ''))
             desc.append(advisory.find('description').text)
             dates.append(advisory.find("pubDate").text)
     
