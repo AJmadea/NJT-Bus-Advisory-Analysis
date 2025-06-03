@@ -9,15 +9,8 @@ from datetime import datetime
 def get_nj_date_time():
     # using an API instead of datetime.now() since server might run on a different part of the world.
     # BUT will use datetime.now() if the api connection fails.
-    url = "http://worldtimeapi.org/api/timezone/America/New_York.txt"
-    try:
-        # The datetime is the 12th element from index 14 inclusive to 33 exclusive
-        dt = requests.get(url).text.split("\n")[2][10:29].replace("T", " ")
-        print(dt)
-        return dt
-    except ConnectionError as ce:
-        print(ce)
-        return datetime.now().strftime("%A %x %I:%M:%S %p")
+    
+    return datetime.now().strftime("%A %x %I:%M:%S %p")
 
 
 def freq_bus(coll):
