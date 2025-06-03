@@ -48,6 +48,7 @@ def parse_data():
             dates.append(advisory.find("pubDate").text)
     
     df = pd.DataFrame({'DESCRIPTION':desc,"BUS":bus,'DATE_TIME':dates})
+    df.BUS=df.BUS.astype(int)
     return df
     
 
