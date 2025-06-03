@@ -1,3 +1,4 @@
+from xml.etree import ElementTree
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -29,6 +30,33 @@ def freq_bus(coll):
             d[each] = 1
     return d
 
+       
+
+        
+     
+
+def parse_data(res):
+
+    res=requests.get("http://njtransit.com/rss/BusAdvisories_feed.xml")
+    res.close()
+
+    tree = ElementTree.fromstring(res.text)
+
+    root=tree[0][7:]
+
+    desc=[]
+    bus=[]
+    dates=[]
+
+    for advisory in root:
+        if advisory.tag=='item':
+            bus.append(advisory.find("title").text.split("-")[0])
+            desc.append(advisory.find('description').text)
+            dates.append(advisory.find("pubDate").text)
+    
+    df = pd.DataFrame({'DESCRIPTION':desc,"BUS":bus,'DATE_TIME':dates})
+    return df
+    
 
 def get_data():
     url = "https://www.njtransit.com/rss/BusAdvisories_feed.xml"
@@ -61,7 +89,6 @@ def get_data():
         d = d.replace('&amp;', "")
         descript.append(d.strip())
     return pd.DataFrame(data={'BUS': bus_lines, 'DATE_TIME': date_times, 'DESCRIPTION': descript})
-
 
 @st.cache(hash_funcs={dict: id})
 def get_most_frequent(freq_table):
@@ -112,7 +139,7 @@ def format_dataframe_into_string(df):
 if __name__ == '__main__':
     st.title("""New Jersey Transit Bus Advisory Feed""")
     current_dt = get_nj_date_time()
-    raw_data = get_data()
+    raw_data = parse_data()
 
     t = "Last Updated {} Eastern Time".format(current_dt)
     st.header(t)
