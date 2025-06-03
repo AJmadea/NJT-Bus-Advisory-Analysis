@@ -28,7 +28,7 @@ def freq_bus(coll):
         
      
 
-def parse_data(res):
+def parse_data():
 
     res=requests.get("http://njtransit.com/rss/BusAdvisories_feed.xml")
     res.close()
